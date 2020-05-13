@@ -26,7 +26,7 @@ apitoken2 = os.getenv('WINDYTOKEN2')
 if not apikey or not apitoken or not apitoken2:
     msg = 'Please check if WINDYKEY, WINDYTOKEN, WINDYTOKEN2 are set'
     raise Exception(msg)
-MAXDELAY = 3
+MAXDELAY = 2
 
 #############################################################
 def info(*args):
@@ -35,7 +35,8 @@ def info(*args):
 
 #############################################################
 def list_archived_images(camid, tz, outpath):
-    info(inspect.stack()[0][3] + '()')
+    # info(inspect.stack()[0][3] + '()')
+    info('camid:{}'.format(camid))
     if os.path.exists(outpath): return pd.read_csv(outpath)
 
     root = 'https://node.windy.com/webcams/v2.0/archive/' + str(camid)
@@ -43,8 +44,19 @@ def list_archived_images(camid, tz, outpath):
     payload['token'] = apitoken
     payload['token2'] = apitoken2
     payload['uid'] = apitoken2
-    r = requests.get(root, params=payload)
-    time.sleep(np.random.rand() * MAXDELAY)
+
+    try:
+        r = requests.get(root, params=payload)
+    except Exception as e:
+        info(e)
+        return None
+    finally:
+        time.sleep(np.random.rand() * MAXDELAY)
+
+    if r.status_code != 200:
+        info('Execution returned code:{}'.format(r.status_code))
+        return None
+
     info('GET: {}'.format(r.url))
     ret = r.json()
 
