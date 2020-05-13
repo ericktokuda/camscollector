@@ -74,35 +74,43 @@ def list_cameras(outpath):
         info('Loading previously loaded cameras from ' + outpath)
         return pd.read_csv(outpath)
 
-
     payload = {'key': apikey}
     payload['show'] = 'webcams:location'
-    root = 'https://api.windy.com/api/webcams/v2/list/limit=35000'
-    # root = 'https://api.windy.com/api/webcams/v2/list/limit=2'
-    r = requests.get(root, params=payload)
-    info('r.url:{}'.format(r.url))
 
-    if r.status_code != 200:
-        info('Execution returned code:{}'.format(r.status_code))
-        return
-
-    entries = r.json()['result']['webcams']
     rows = []
-    for i, entry in enumerate(entries):
-        rows.append([
-                entry['id'],
-                entry['status'],
-                entry['location']['city'],
-                entry['location']['country_code'],
-                entry['location']['continent_code'],
-                entry['location']['latitude'],
-                entry['location']['longitude'],
-                entry['location']['timezone'],
-                ])
-        cols = 'id,status,city,country_code,continent_code,'\
-                'latitude,longitude,timezone'.split(',')
+    for offset in range(0, 5, 50):
+        root = 'https://api.windy.com/api/webcams/v2/list/orderby=popularity,desc/limit=50,{}'.format(offset)
+
+        r = requests.get(root, params=payload)
+        time.sleep(np.random.rand() * MAXDELAY)
+        info('r.url:{}'.format(r.url))
+
+        if r.status_code != 200:
+            info('Execution returned code:{}'.format(r.status_code))
+            break
+
+        entries = r.json()['result']['webcams']
+        if len(entries) == 0:
+            info('No entries found in this range')
+            break
+
+        for i, entry in enumerate(entries):
+            rows.append([
+                    entry['id'],
+                    entry['status'],
+                    entry['location']['city'],
+                    entry['location']['country_code'],
+                    entry['location']['continent_code'],
+                    entry['location']['latitude'],
+                    entry['location']['longitude'],
+                    entry['location']['timezone'],
+                    ])
+
+    cols = 'id,status,city,country_code,continent_code,'\
+            'latitude,longitude,timezone'.split(',')
     df = pd.DataFrame(rows, columns=cols)
     df.to_csv(outpath, index=False)
+
     return df
 
 ##########################################################
@@ -160,6 +168,7 @@ def main():
     camspath = pjoin(args.outdir, 'cams.csv')
 
     camsdf = list_cameras(camspath)
+    breakpoint()
     list_archived_images_all(camsdf, urldir)
     download_images_all(urldir, imgdir)
 
