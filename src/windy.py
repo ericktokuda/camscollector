@@ -78,7 +78,7 @@ def list_cameras(outpath):
     payload['show'] = 'webcams:location'
 
     rows = []
-    for offset in range(0, 5, 50):
+    for offset in range(0, 35000, 50):
         root = 'https://api.windy.com/api/webcams/v2/list/orderby=popularity,desc/limit=50,{}'.format(offset)
 
         r = requests.get(root, params=payload)
