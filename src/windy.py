@@ -26,7 +26,7 @@ apitoken2 = os.getenv('WINDYTOKEN2')
 if not apikey or not apitoken or not apitoken2:
     msg = 'Please check if WINDYKEY, WINDYTOKEN, WINDYTOKEN2 are set'
     raise Exception(msg)
-MAXDELAY = 3
+MAXDELAY = 2
 
 #############################################################
 def info(*args):
@@ -44,6 +44,7 @@ def list_archived_images(camid, tz, outpath):
     payload['token2'] = apitoken2
     payload['uid'] = apitoken2
     r = requests.get(root, params=payload)
+    time.sleep(np.random.rand() * MAXDELAY)
     info('GET: {}'.format(r.url))
     ret = r.json()
 
@@ -67,7 +68,7 @@ def list_archived_images(camid, tz, outpath):
     return imgdf
 
 #############################################################
-def list_cameras(outpath):
+def list_cameras(outpath, limit=5):
     info(inspect.stack()[0][3] + '()')
 
     if os.path.exists(outpath):
@@ -78,7 +79,7 @@ def list_cameras(outpath):
     payload['show'] = 'webcams:location'
 
     rows = []
-    for offset in range(0, 35000, 50):
+    for offset in range(0, limit, 50):
         root = 'https://api.windy.com/api/webcams/v2/list/orderby=popularity,desc/limit=50,{}'.format(offset)
 
         r = requests.get(root, params=payload)
@@ -116,11 +117,11 @@ def list_cameras(outpath):
 ##########################################################
 def list_archived_images_all(camsdf, urldir):
     info(inspect.stack()[0][3] + '()')
+    if not os.path.isdir(urldir): os.mkdir(urldir)
 
     for i, row in camsdf.iterrows():
         urlspath = pjoin(urldir, '{}.csv'.format(row.id))
         urlsdf = list_archived_images(row.id, row.timezone, urlspath)
-        time.sleep(2)
 
 ##########################################################
 def download_images(imgsdf, imgdir):
@@ -137,6 +138,11 @@ def download_images(imgsdf, imgdir):
 def download_images_all(urldir, imgdir):
     info(inspect.stack()[0][3] + '()')
 
+    if not os.path.isdir(urldir):
+        info('urldir {} does not exist'.format(urldir))
+        return
+    elif not os.path.isdir(imgdir): os.mkdir(imgdir)
+
     files = sorted(os.listdir(urldir))
     for i, f in enumerate(files):
         imgsdf = pd.read_csv(pjoin(urldir, f))
@@ -147,7 +153,7 @@ def main():
     info(inspect.stack()[0][3] + '()')
     t0 = time.time()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--nprocs', type=int, default=1, help='nprocs')
+    parser.add_argument('--limit', type=int, default=2 help='Max number of cameras')
     parser.add_argument('--outdir', type=str, default='/tmp/', help='outdir')
     args = parser.parse_args()
 
@@ -167,8 +173,7 @@ def main():
     imgdir = pjoin(args.outdir, 'img')
     camspath = pjoin(args.outdir, 'cams.csv')
 
-    camsdf = list_cameras(camspath)
-    breakpoint()
+    camsdf = list_cameras(camspath, limit=args.limit)
     list_archived_images_all(camsdf, urldir)
     download_images_all(urldir, imgdir)
 
