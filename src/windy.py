@@ -46,12 +46,11 @@ def list_archived_images(camid, tz, outpath):
     payload['uid'] = apitoken2
 
     try:
+        time.sleep(np.random.rand() * MAXDELAY)
         r = requests.get(root, params=payload)
     except Exception as e:
         info(e)
         return None
-    finally:
-        time.sleep(np.random.rand() * MAXDELAY)
 
     if r.status_code != 200:
         info('Execution returned code:{}'.format(r.status_code))
@@ -140,12 +139,21 @@ def list_archived_images_all(camsdf, urldir):
 def download_images(imgsdf, imgdir):
     for i, row in imgsdf.iterrows():
         imgpath = pjoin(imgdir, '{}-{}.jpg'.format(row.camid, row.capturedon))
-        r = requests.get(row.url)
+        try:
+            time.sleep(np.random.rand() * MAXDELAY)
+            r = requests.get(row.url)
+        except Exception as e:
+            info(e)
+            continue
+
+        if r.status_code != 200:
+            info('Execution returned code:{}'.format(r.status_code))
+            continue
+
         info('GET: {}'.format(r.url))
         fh = open(imgpath, "wb")
         fh.write(r.content)
         fh.close()
-        time.sleep(np.random.rand() * MAXDELAY)
 
 ##########################################################
 def download_images_all(urldir, imgdir):
