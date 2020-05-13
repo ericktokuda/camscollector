@@ -26,7 +26,7 @@ apitoken2 = os.getenv('WINDYTOKEN2')
 if not apikey or not apitoken or not apitoken2:
     msg = 'Please check if WINDYKEY, WINDYTOKEN, WINDYTOKEN2 are set'
     raise Exception(msg)
-MAXDELAY = 2
+MAXDELAY = 3
 
 #############################################################
 def info(*args):
@@ -119,6 +119,7 @@ def list_archived_images_all(camsdf, urldir):
     info(inspect.stack()[0][3] + '()')
     if not os.path.isdir(urldir): os.mkdir(urldir)
 
+    # for i, row in camsdf[::-1].iterrows():
     for i, row in camsdf.iterrows():
         urlspath = pjoin(urldir, '{}.csv'.format(row.id))
         urlsdf = list_archived_images(row.id, row.timezone, urlspath)
@@ -153,7 +154,7 @@ def main():
     info(inspect.stack()[0][3] + '()')
     t0 = time.time()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--limit', type=int, default=2 help='Max number of cameras')
+    parser.add_argument('--limit', type=int, default=2, help='Max number of cameras')
     parser.add_argument('--outdir', type=str, default='/tmp/', help='outdir')
     args = parser.parse_args()
 
@@ -175,6 +176,7 @@ def main():
 
     camsdf = list_cameras(camspath, limit=args.limit)
     list_archived_images_all(camsdf, urldir)
+    return
     download_images_all(urldir, imgdir)
 
     info('Elapsed time:{}'.format(time.time()-t0))
