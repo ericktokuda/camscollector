@@ -129,14 +129,14 @@ def list_cameras(outpath, limit=5):
     return df
 
 ##########################################################
-def list_archived_images_all(camsdf, urldir):
+def list_archived_images_from_cameras(camsdf, urldir):
     info(inspect.stack()[0][3] + '()')
     if not os.path.isdir(urldir): os.mkdir(urldir)
 
     # for i, row in camsdf[::-1].iterrows():
     for i, row in camsdf.iterrows():
         urlspath = pjoin(urldir, '{}.csv'.format(row.id))
-        urlsdf = list_archived_images(row.id, row.timezone, urlspath)
+        urlsdf = list_archived_images_from_camera(row.id, row.timezone, urlspath)
 
 ##########################################################
 def download_images(imgsdf, imgdir):
@@ -159,7 +159,7 @@ def download_images(imgsdf, imgdir):
         fh.close()
 
 ##########################################################
-def download_images_all(urldir, imgdir):
+def download_images_from_cameras(camids, urldir, imgdir):
     info(inspect.stack()[0][3] + '()')
 
     if not os.path.isdir(urldir):
@@ -167,9 +167,12 @@ def download_images_all(urldir, imgdir):
         return
     elif not os.path.isdir(imgdir): os.mkdir(imgdir)
 
-    files = sorted(os.listdir(urldir))
-    for i, f in enumerate(files):
-        imgsdf = pd.read_csv(pjoin(urldir, f))
+    for camid in camids:
+        csvpath = pjoin(urldir, '{}.csv'.format(camid))
+        if not os.path.exists(csvpath):
+            info('Could not find {}'.format(csvpath))
+            continue
+        imgsdf = pd.read_csv(csvpath)
         download_images(imgsdf, imgdir)
 
 ##########################################################
@@ -197,10 +200,10 @@ def main():
     imgdir = pjoin(args.outdir, 'img')
     camspath = pjoin(args.outdir, 'cams.csv')
 
-    camsdf = list_cameras(camspath, limit=args.limit)
-    return
-    list_archived_images_all(camsdf, urldir)
-    download_images_all(urldir, imgdir)
+    # camsdf = list_cameras(camspath, limit=args.limit)
+    # list_archived_images_all(camsdf, urldir)
+    camids = pd.read_csv(pjoin(args.outdir, 'city.csv').id.tolist()
+    download_images_from_cameras(camids, urldir, imgdir)
 
     info('Elapsed time:{}'.format(time.time()-t0))
 
