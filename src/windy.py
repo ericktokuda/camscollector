@@ -26,7 +26,7 @@ apitoken2 = os.getenv('WINDYTOKEN2')
 if not apikey or not apitoken or not apitoken2:
     msg = 'Please check if WINDYKEY, WINDYTOKEN, WINDYTOKEN2 are set'
     raise Exception(msg)
-MAXDELAY = 2
+MAXDELAY = 1
 
 #############################################################
 def info(*args):
@@ -149,11 +149,11 @@ def download_images(imgsdf, imgdir):
             info(e)
             continue
 
+        info('GET: {}'.format(r.url))
         if r.status_code != 200:
             info('Execution returned code:{}'.format(r.status_code))
             continue
 
-        info('GET: {}'.format(r.url))
         fh = open(imgpath, "wb")
         fh.write(r.content)
         fh.close()
@@ -202,7 +202,7 @@ def main():
 
     # camsdf = list_cameras(camspath, limit=args.limit)
     # list_archived_images_all(camsdf, urldir)
-    camids = pd.read_csv(pjoin(args.outdir, 'city.csv').id.tolist()
+    camids = pd.read_csv(pjoin(args.outdir, 'cams.csv')).id.tolist()
     download_images_from_cameras(camids, urldir, imgdir)
 
     info('Elapsed time:{}'.format(time.time()-t0))
