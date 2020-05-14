@@ -91,7 +91,10 @@ def list_cameras(outpath, limit=5):
 
     rows = []
     for offset in range(0, limit, 50):
-        root = 'https://api.windy.com/api/webcams/v2/list/orderby=popularity,desc/limit=50,{}'.format(offset)
+        root = 'https://api.windy.com/api/webcams/v2/list' \
+                '/category=traffic' \
+                '/orderby=popularity,desc' \
+                '/limit=50,{}'.format(offset)
 
         r = requests.get(root, params=payload)
         time.sleep(np.random.rand() * MAXDELAY)
@@ -195,8 +198,8 @@ def main():
     camspath = pjoin(args.outdir, 'cams.csv')
 
     camsdf = list_cameras(camspath, limit=args.limit)
-    list_archived_images_all(camsdf, urldir)
     return
+    list_archived_images_all(camsdf, urldir)
     download_images_all(urldir, imgdir)
 
     info('Elapsed time:{}'.format(time.time()-t0))
